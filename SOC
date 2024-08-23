@@ -1,0 +1,47 @@
+# Define the lookup table for SOC based on voltage
+# For example: (voltage, SOC)
+lookup_table = [
+    (2.87, 0),    # 2.87V = 0% SOC
+    (3.65, 100),   # 3.65V = 100% SOC
+]
+
+def get_soc_from_voltage(voltage):
+    # Ensure the voltage is within the range of the lookup table
+    if voltage < lookup_table[0][0] or voltage > lookup_table[-1][0]:
+        raise ValueError("Voltage out of range")
+
+    # Find the two closest points in the lookup table
+    for i in range(len(lookup_table) - 1):
+        v1, soc1 = lookup_table[i]
+        v2, soc2 = lookup_table[i + 1]
+        if v1 <= voltage <= v2:
+            # Linear interpolation between (v1, soc1) and (v2, soc2)
+            soc = soc1 + (soc2 - soc1) * (voltage - v1) / (v2 - v1)
+            return soc
+
+    # If no suitable range is found (should not happen with the above check)
+    raise ValueError("Voltage not found in lookup table")
+
+def compute_socs_for_cells(voltages):
+    socs = []
+    for voltage in voltages:
+        try:
+            soc = get_soc_from_voltage(voltage)
+            socs.append(soc)
+        except ValueError as e:
+            print(f"Error for voltage {voltage}V: {e}")
+            socs.append(None)  # Use None or some placeholder for out-of-range values
+    return socs
+
+# Example usage with 127 cell voltages
+# Replace these example voltages with actual cell voltages
+cell_voltages = [ ]
+
+socs = compute_socs_for_cells(cell_voltages)
+
+# Print SOCs for each cell
+for i, soc in enumerate(socs):
+    if soc is not None:
+        print(f"Cell {i+1}: SOC = {soc:.2f}%")
+    else:
+        print(f"Cell {i+1}: SOC value could not be determined")
